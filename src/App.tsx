@@ -1,5 +1,4 @@
 import { Show, createSignal } from "solid-js";
-
 import Sketch from "./Sketch";
 
 function App() {
@@ -44,7 +43,7 @@ function App() {
 		</Show>
 
 		<Show when={painting() != null}>
-			<Sketch paintingName={painting()!}></Sketch>
+			<Sketch paintingName={painting()!} backToLevelSelect={() => setPainting(null)}></Sketch>
 			<button onClick={() => setPainting(null)}>Back to Levels</button>
 		</Show>
 	</>;

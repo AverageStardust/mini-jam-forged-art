@@ -5,6 +5,7 @@ import paintingPaths from "./paintingPaths.json";
 
 interface SketchProps {
 	paintingName: string;
+	backToLevelSelect: () => void;
 }
 
 const sketchGenerator = (p5: p5) => {
