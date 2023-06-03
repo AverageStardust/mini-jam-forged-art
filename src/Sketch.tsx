@@ -7,6 +7,7 @@ interface SketchProps {
 	paintingName: string;
 	backToLevelSelect: () => void;
 	markLevelAsComplete: (score: number) => void;
+	endLevel: () => void;
 }
 
 enum SketchState {
@@ -35,6 +36,7 @@ const sketchGenerator = (p5: p5) => {
 	
 	let state: SketchState = SketchState.waiting;
 	let markLevelAsComplete: (score: number) => void = () => { };
+	let endLevel: () => void = () => { };
 
 	p5.setup = function () {
 		canvas = p5.createCanvas(400, 400);
@@ -46,6 +48,7 @@ const sketchGenerator = (p5: p5) => {
 	function propsMemo() {
 		const props = sketchSettings.props as SketchProps;
 		markLevelAsComplete = props.markLevelAsComplete;
+		endLevel = props.endLevel;
 		const paintingName = props.paintingName;
 		paintingPath = (paintingPaths as Record<string, { x: number, y: number }[]>)[paintingName];
 		brushPosition = { x: paintingPath[0].x, y: paintingPath[0].y };
@@ -99,6 +102,7 @@ const sketchGenerator = (p5: p5) => {
 				if (e) {
 					state = SketchState.win;
 					markLevelAsComplete(getScore());
+					endLevel();
 				}
 				focusEffects.splice(i, 1);
 				i--;
@@ -199,6 +203,7 @@ const sketchGenerator = (p5: p5) => {
 			if (brushDist > failDist) {
 				p5.exitPointerLock();
 				state = SketchState.fail;
+				endLevel();
 			}
 			brushDists.push(brushDist);
 

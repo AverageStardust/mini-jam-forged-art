@@ -8,6 +8,9 @@ function App() {
 	const [painting, setPainting] = createSignal<null | PaintingName>(null);
 	const [paintingIsComplete, setPaintingIsComplete] = createSignal<Map<PaintingName, number>>(new Map());
 
+	const [secondsBeforeLevelSelect, setSecondsBeforeLevelSelect] = createSignal<null | number>(null);
+	let intervalReference: number | null = null;
+
 	const tapSound = new Howl({
 		src: ["./sounds/UIClick.mp3"],
 	});
@@ -26,6 +29,10 @@ function App() {
 					level: true,
 					complete: paintingIsComplete().has("sonOfMan")
 				}} onClick={() => {
+					if (intervalReference != null) {
+						clearInterval(intervalReference);
+						setSecondsBeforeLevelSelect(null);
+					}
 					hoverSound.play();
 					setPainting("sonOfMan");
 				}}>
@@ -39,6 +46,10 @@ function App() {
 					level: true,
 					complete: paintingIsComplete().has("natureMorte")
 				}} onClick={() => {
+					if (intervalReference != null) {
+						clearInterval(intervalReference);
+						setSecondsBeforeLevelSelect(null);
+					}
 					hoverSound.play();
 					setPainting("natureMorte");
 				}}>
@@ -52,6 +63,10 @@ function App() {
 					level: true,
 					complete: paintingIsComplete().has("theRoom")
 				}} onClick={() => {
+					if (intervalReference != null) {
+						clearInterval(intervalReference);
+						setSecondsBeforeLevelSelect(null);
+					}
 					hoverSound.play();
 					setPainting("theRoom");
 				}}>
@@ -65,7 +80,25 @@ function App() {
 		</Show>
 
 		<Show when={painting() != null}>
-			<Sketch paintingName={painting()!} backToLevelSelect={() => setPainting(null)} markLevelAsComplete={
+			<Sketch paintingName={painting()!} backToLevelSelect={() => setPainting(null)} endLevel={() => {
+				setSecondsBeforeLevelSelect(5);
+				intervalReference = setInterval(() => {
+					const seconds = secondsBeforeLevelSelect();
+
+					if (seconds != null) {
+						if (seconds <= 0) {
+							setPainting(null);
+
+							if (intervalReference != null) {
+								clearInterval(intervalReference);
+								setSecondsBeforeLevelSelect(null);
+							}
+						} else {
+							setSecondsBeforeLevelSelect(seconds - 1);
+						}
+					};
+				}, 1000);
+			}} markLevelAsComplete={
 				(score: number) => {
 					setPaintingIsComplete((complete) => {
 						const paintingName = painting();
@@ -75,9 +108,13 @@ function App() {
 					})
 				}}></Sketch>
 			<button onClick={() => {
+				if (intervalReference != null) {
+					clearInterval(intervalReference);
+					setSecondsBeforeLevelSelect(null);
+				}
 				hoverSound.play();
 				setPainting(null);
-			}}>Back to Levels</button>
+			}}>Back to Levels <Show when={secondsBeforeLevelSelect() != null}> in {secondsBeforeLevelSelect()}s</Show></button>
 		</Show>
 	</>;
 }
