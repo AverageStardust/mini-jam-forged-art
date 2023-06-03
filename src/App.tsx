@@ -1,9 +1,11 @@
 import { Show, createSignal } from "solid-js";
 import Sketch from "./Sketch";
 
+type PaintingName = "sonOfMan";
+
 function App() {
-	const [painting, setPainting] = createSignal<null | "sonOfMan">(null);
-	const [paintingIsComplete, setPaintingIsComplete] = createSignal<[boolean, boolean, boolean]>([false, true, false]);
+	const [painting, setPainting] = createSignal<null | PaintingName>(null);
+	const [paintingIsComplete, setPaintingIsComplete] = createSignal<Set<PaintingName>>(new Set());
 
 	return <>
 		<Show when={painting() == null}>
@@ -14,28 +16,28 @@ function App() {
 			<div class="levels">
 				<div classList={{
 					level: true,
-					complete: paintingIsComplete()[0]
+					complete: paintingIsComplete().has("sonOfMan")
 				}} onClick={() => setPainting("sonOfMan")}>
 					<img src="./level_1_thumbnail.png"></img>
-					<Show when={paintingIsComplete()[0]}>
+					<Show when={paintingIsComplete().has("sonOfMan")}>
 						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M0 11.386l1.17-1.206c1.951.522 5.313 1.731 8.33 3.597 3.175-4.177 9.582-9.398 13.456-11.777l1.044 1.073-14 18.927-10-10.614z"/></svg>
 					</Show>
 				</div>
 				<div classList={{
 					level: true,
-					complete: paintingIsComplete()[1]
+					complete: paintingIsComplete().has("sonOfMan")
 				}} onClick={() => setPainting("sonOfMan")}>
 					<img src="./level_2_thumbnail.png"></img>
-					<Show when={paintingIsComplete()[1]}>
+					<Show when={paintingIsComplete().has("sonOfMan")}>
 						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M0 11.386l1.17-1.206c1.951.522 5.313 1.731 8.33 3.597 3.175-4.177 9.582-9.398 13.456-11.777l1.044 1.073-14 18.927-10-10.614z"/></svg>
 					</Show>
 				</div>
 				<div classList={{
 					level: true,
-					complete: paintingIsComplete()[2]
+					complete: paintingIsComplete().has("sonOfMan")
 				}} onClick={() => setPainting("sonOfMan")}>
 					<img src="./level_3_thumbnail.png"></img>
-					<Show when={paintingIsComplete()[2]}>
+					<Show when={paintingIsComplete().has("sonOfMan")}>
 						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M0 11.386l1.17-1.206c1.951.522 5.313 1.731 8.33 3.597 3.175-4.177 9.582-9.398 13.456-11.777l1.044 1.073-14 18.927-10-10.614z"/></svg>
 					</Show>
 				</div>
@@ -43,7 +45,12 @@ function App() {
 		</Show>
 
 		<Show when={painting() != null}>
-			<Sketch paintingName={painting()!} backToLevelSelect={() => setPainting(null)}></Sketch>
+			<Sketch paintingName={painting()!} backToLevelSelect={() => setPainting(null)} markLevelAsComplete={() => {
+				setPaintingIsComplete((complete) => {
+					complete.add(painting() as PaintingName);
+					return complete;
+				})
+			}}></Sketch>
 			<button onClick={() => setPainting(null)}>Back to Levels</button>
 		</Show>
 	</>;

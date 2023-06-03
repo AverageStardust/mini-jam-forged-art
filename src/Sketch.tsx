@@ -6,6 +6,7 @@ import paintingPaths from "./paintingPaths.json";
 interface SketchProps {
 	paintingName: string;
 	backToLevelSelect: () => void;
+	markLevelAsComplete: () => void;
 }
 
 enum SketchState {
@@ -31,7 +32,9 @@ const sketchGenerator = (p5: p5) => {
 		brushVelocity = { x: 0, y: 0 },
 		oldBrushPosition: { x: number, y: number },
 		brushDists: number[] = [];
+	
 	let state: SketchState = SketchState.waiting;
+	let markLevelAsComplete = () => { };
 
 	p5.setup = function () {
 		canvas = p5.createCanvas(400, 400);
@@ -42,6 +45,7 @@ const sketchGenerator = (p5: p5) => {
 
 	function propsMemo() {
 		const props = sketchSettings.props as SketchProps;
+		markLevelAsComplete = props.markLevelAsComplete;
 		const paintingName = props.paintingName;
 		paintingPath = (paintingPaths as Record<string, { x: number, y: number }[]>)[paintingName];
 		brushPosition = { x: paintingPath[0].x, y: paintingPath[0].y };
@@ -94,6 +98,7 @@ const sketchGenerator = (p5: p5) => {
 			if (age > 30) {
 				if (e) {
 					state = SketchState.win;
+					markLevelAsComplete();
 					console.log(getScore());
 				}
 				focusEffects.splice(i, 1);
