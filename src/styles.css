@@ -96,7 +96,7 @@ canvas {
 }
 
 h1 {
-	font-size: 64px;
+	font-size: 52px;
 	margin-bottom: 24px;
 	color: #ffffff;
 	text-shadow: 0 0 6px #000;
@@ -122,4 +122,9 @@ button:hover {
 
 .moto {
 	color: #ddd;
+}
+
+.score {
+	position: absolute;
+    bottom: 0;
 }
