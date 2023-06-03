@@ -1,0 +1,125 @@
+@import url("https://fonts.googleapis.com/css2?family=Grandstander:wght@400;700&display=swap");
+
+* {
+	-webkit-tap-highlight-color: rgba(0,0,0,0);
+	-webkit-tap-highlight-color: transparent;
+	-webkit-touch-callout: none; /* iOS Safari */
+	-webkit-user-select: none; /* Safari */
+	-khtml-user-select: none; /* Konqueror HTML */
+	-moz-user-select: none; /* Old versions of Firefox */
+	-ms-user-select: none; /* Internet Explorer/Edge */
+	user-select: none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
+	touch-action: none;
+	font-family: "Grandstander", cursive;
+	text-shadow: 0 0 3px #000;
+}
+
+html, body {
+	width: 100vw;
+	min-width: 100vw;
+	max-width: 100vw;
+	height: 100vh;
+	min-height: 100vh;
+	max-height: 100vh;
+}
+
+body {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	position: fixed;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	color: #fff;
+	font-size: 24px;
+	background: #1a1a1a;
+	background: linear-gradient(rgb(106, 39, 14), rgb(29, 7, 0));
+}
+
+#root {
+	display: flex;
+    justify-content: center;
+    align-items: center;
+	flex-direction: column;
+}
+
+canvas {
+	border-radius: 6px;
+    box-shadow: 0 0 5px #000;
+    border: 3px solid #831;
+	overflow: hidden;
+}
+
+.levels {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	flex-wrap: wrap;
+	margin-top: 36px;
+	gap: 12px;
+}
+
+.level {
+	width: 100px;
+	height: 100px;
+	background-size: cover;
+	opacity: 0.5;
+	border: 3px solid #831;
+	border-radius: 6px;
+	transform: scale(0.9);
+	transition: all 0.2s ease-in-out;
+	cursor: pointer;
+	position: relative;
+	filter: grayscale(1);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	box-shadow: 0 0 3px #000;
+	overflow: hidden;
+}
+
+.level svg {
+	position: absolute;
+	width: 60px;
+	height: 60px;
+	fill: #831;
+	opacity: 0.8;
+	filter: drop-shadow(0 0 3px #000);
+}
+
+.level:hover, .level.complete {
+	opacity: 1;
+	transform: scale(1);
+	filter: grayscale(0);
+}
+
+h1 {
+	font-size: 64px;
+	margin-bottom: 24px;
+	color: #ffffff;
+	text-shadow: 0 0 6px #000;
+}
+
+button {
+	font-size: 24px;
+	padding: 12px 24px;
+	border-radius: 6px;
+	border: 3px solid #831;
+	background: rgb(95, 35, 12);
+	color: #fff;
+	cursor: pointer;
+	opacity: 0.5;
+	box-shadow: 0 0 3px #000;
+	transition: all 0.2s ease-in-out;
+	margin-top: 12px;
+}
+
+button:hover {
+	opacity: 1;
+}
+
+.moto {
+	color: #ddd;
+}
