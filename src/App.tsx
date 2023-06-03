@@ -7,7 +7,7 @@ function App() {
 
 	return (
 		<div>
-			<Sketch paintingName="mona lisa"></Sketch>
+			<Sketch paintingName="sonOfMan"></Sketch>
 		</div>
 	);
 }
