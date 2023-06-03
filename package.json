@@ -1,0 +1,21 @@
+{
+	"name": "vite-project",
+	"private": true,
+	"version": "0.0.0",
+	"type": "module",
+	"scripts": {
+		"start": "vite",
+		"dev": "vite",
+		"build": "vite build",
+		"serve": "vite preview"
+	},
+	"dependencies": {
+		"@types/p5": "^1.6.2",
+		"solid-js": "^1.6.4",
+		"solid-p5-wrapper": "1.0.5"
+	},
+	"devDependencies": {
+		"vite": "^4.0.0",
+		"vite-plugin-solid": "^2.5.0"
+	}
+}
