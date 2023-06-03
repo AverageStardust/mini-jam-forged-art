@@ -120,6 +120,34 @@ const sketchGenerator = (p5: p5) => {
 			p5.line(brushPosition.x, brushPosition.y, brushPosition.x, brushPosition.y + 12);
 			p5.line(brushPosition.x, brushPosition.y, brushPosition.x + 32, brushPosition.y + 32);
 		}
+
+		p5.scale(1 / paintingScale);
+
+		if (brushDists.length > 1) {
+			p5.noStroke();
+			p5.textAlign(p5.CENTER, p5.CENTER);
+			p5.textSize(32);
+			const instantScore = brushDists[brushDists.length - 1] / failDist;
+			let message, messageColor;
+			if (state === SketchState.fail) {
+				message = "Failed Forgery";
+				messageColor = "red";
+			} else if (instantScore < 0.1) {
+				message = "Masterful!";
+				messageColor = "#0AD";
+			} else if (instantScore < 0.2) {
+				message = "Good Job";
+				messageColor = "#1B1";
+			} else if (instantScore < 0.5) {
+				message = "It's Okay";
+				messageColor = "yellow";
+			} else {
+				message = "Follow the line!";
+				messageColor = "orange";
+			}
+			p5.fill(messageColor);
+			p5.text(message, p5.width / 2, p5.height - 20);
+		}
 	};
 
 	function drawPath(points: { x: number, y: number }[]) {
@@ -133,19 +161,24 @@ const sketchGenerator = (p5: p5) => {
 	}
 
 	function update() {
-		brushVelocity.x += p5.movedX * 0.008;
-		brushVelocity.y += p5.movedY * 0.008;
-		brushVelocity.x *= 0.98;
-		brushVelocity.y *= 0.98;
+		brushVelocity.x += p5.movedX * 0.012;
+		brushVelocity.y += p5.movedY * 0.012;
+		brushVelocity.x *= 0.99;
+		brushVelocity.y *= 0.99;
 		brushPosition.x += brushVelocity.x;
 		brushPosition.y += brushVelocity.y;
 
 		if (Math.hypot(brushPosition.x - oldBrushPosition.x, brushPosition.y - oldBrushPosition.y) > 5) {
+			ogPainting.noStroke();
 			ogPainting.erase();
 			ogPainting.fill(255, 32);
-			ogPainting.noStroke();
 			for (let i = 0; i < 32; i++) {
-				ogPainting.circle(oldBrushPosition.x + p5.randomGaussian(0, 15), oldBrushPosition.y + p5.randomGaussian(0, 15), 16);
+				ogPainting.circle(oldBrushPosition.x + p5.random(0, 20), oldBrushPosition.y + p5.randomGaussian(0, 20), 16);
+			}
+			ogPainting.noErase();
+			for (let i = 0; i < 4; i++) {
+				ogPainting.fill(p5.random(100, 255), p5.random(100, 255), p5.random(100, 255), 32);
+				ogPainting.circle(oldBrushPosition.x + p5.random(0, 8), oldBrushPosition.y + p5.randomGaussian(0, 8), 16);
 			}
 			oldBrushPosition = { ...brushPosition };
 
