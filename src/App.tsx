@@ -1,11 +1,19 @@
 import { Show, createSignal } from "solid-js";
 import Sketch from "./Sketch";
+import { Howl } from 'howler';
 
 type PaintingName = "sonOfMan" | "natureMorte" | "theRoom";
 
 function App() {
 	const [painting, setPainting] = createSignal<null | PaintingName>(null);
 	const [paintingIsComplete, setPaintingIsComplete] = createSignal<Map<PaintingName, number>>(new Map());
+
+	const tapSound = new Howl({
+		src: ["./sounds/UIClick.mp3"],
+	});
+	const hoverSound = new Howl({
+		src: ["./sounds/UIHover.mp3"],
+	});
 
 	return <>
 		<Show when={painting() == null}>
@@ -17,7 +25,10 @@ function App() {
 				<div classList={{
 					level: true,
 					complete: paintingIsComplete().has("sonOfMan")
-				}} onClick={() => setPainting("sonOfMan")}>
+				}} onClick={() => {
+					hoverSound.play();
+					setPainting("sonOfMan");
+				}}>
 					<img src="./level_1_thumbnail.png"></img>
 					<Show when={paintingIsComplete().has("sonOfMan")}>
 						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M0 11.386l1.17-1.206c1.951.522 5.313 1.731 8.33 3.597 3.175-4.177 9.582-9.398 13.456-11.777l1.044 1.073-14 18.927-10-10.614z" /></svg>
@@ -27,7 +38,10 @@ function App() {
 				<div classList={{
 					level: true,
 					complete: paintingIsComplete().has("natureMorte")
-				}} onClick={() => setPainting("natureMorte")}>
+				}} onClick={() => {
+					hoverSound.play();
+					setPainting("natureMorte");
+				}}>
 					<img src="./level_2_thumbnail.png"></img>
 					<Show when={paintingIsComplete().has("natureMorte")}>
 						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M0 11.386l1.17-1.206c1.951.522 5.313 1.731 8.33 3.597 3.175-4.177 9.582-9.398 13.456-11.777l1.044 1.073-14 18.927-10-10.614z" /></svg>
@@ -37,7 +51,10 @@ function App() {
 				<div classList={{
 					level: true,
 					complete: paintingIsComplete().has("theRoom")
-				}} onClick={() => setPainting("theRoom")}>
+				}} onClick={() => {
+					hoverSound.play();
+					setPainting("theRoom");
+				}}>
 					<img src="./level_3_thumbnail.png"></img>
 					<Show when={paintingIsComplete().has("theRoom")}>
 						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M0 11.386l1.17-1.206c1.951.522 5.313 1.731 8.33 3.597 3.175-4.177 9.582-9.398 13.456-11.777l1.044 1.073-14 18.927-10-10.614z" /></svg>
@@ -57,7 +74,10 @@ function App() {
 						return complete;
 					})
 				}}></Sketch>
-			<button onClick={() => setPainting(null)}>Back to Levels</button>
+			<button onClick={() => {
+				hoverSound.play();
+				setPainting(null);
+			}}>Back to Levels</button>
 		</Show>
 	</>;
 }
