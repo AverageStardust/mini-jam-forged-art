@@ -7,18 +7,30 @@ interface SketchProps {
 	paintingName: string;
 }
 
+enum SketchState {
+	waiting,
+	drawing,
+	ending,
+	win,
+	fail
+}
+
 const sketchGenerator = (p5: p5) => {
 	const paintingScale = 0.64;
+	const failDist = 100;
+
 	let canvas: p5.Renderer,
 		ogPainting: p5.Graphics,
 		fakePainting: p5.Image,
 		paintingPath: { x: number, y: number }[];
 
-	let dropEffects: { x: number, y: number, t: number }[] = [];
+	let focusEffects: { x: number, y: number, t: number, r: number, m: number, e: boolean }[] = [];
 
 	let brushPosition = { x: 0, y: 0 },
 		brushVelocity = { x: 0, y: 0 },
-		oldBrushPosition: { x: number, y: number };
+		oldBrushPosition: { x: number, y: number },
+		brushDists: number[] = [];
+	let state: SketchState = SketchState.waiting;
 
 	p5.setup = function () {
 		canvas = p5.createCanvas(400, 400);
@@ -34,6 +46,8 @@ const sketchGenerator = (p5: p5) => {
 		brushPosition = { x: paintingPath[0].x, y: paintingPath[0].y };
 		brushVelocity = { x: 0, y: 0 };
 		oldBrushPosition = { ...brushPosition };
+		brushDists = [];
+		state = SketchState.waiting;
 
 		canvas.hide();
 		fakePainting = p5.loadImage(`${paintingName}_fake.png`);
@@ -49,6 +63,13 @@ const sketchGenerator = (p5: p5) => {
 		if (!ogPainting || !fakePainting) return;
 
 		const hasLock = document.pointerLockElement === canvas.elt;
+		if (state === SketchState.drawing && !hasLock) {
+			state = SketchState.waiting;
+			focusEffects.push({ ...brushPosition, t: p5.frameCount, r: 30, m: 1.18, e: false });
+		} else if (state === SketchState.waiting && hasLock) {
+			state = SketchState.drawing;
+			focusEffects.push({ ...brushPosition, t: p5.frameCount, r: 2000, m: 0.85, e: false });
+		}
 
 		if (hasLock) update();
 
@@ -66,24 +87,34 @@ const sketchGenerator = (p5: p5) => {
 		drawPath(paintingPath);
 		p5.drawingContext.setLineDash([]);
 
-		for (let i = 0; i < dropEffects.length; i++) {
-			const { x, y, t } = dropEffects[i];
+		for (let i = 0; i < focusEffects.length; i++) {
+			const { x, y, t, r, e } = focusEffects[i];
 			const age = p5.frameCount - t;
 			if (age > 30) {
-				dropEffects.splice(i, 1);
+				if (e) {
+					state = SketchState.win;
+					console.log(getScore());
+				}
+				focusEffects.splice(i, 1);
 				i--;
 				continue;
+			} else {
+				focusEffects[i].r *= focusEffects[i].m;
 			}
 			p5.noFill();
-			const radius = 300 / (age + 0.1);
 			p5.stroke(0, 300 - age * 10);
-			p5.strokeWeight(radius * 0.25);
-			p5.circle(x, y, radius * 2);
+			p5.strokeWeight(r * 0.25);
+			p5.circle(x, y, r * 2);
+			ogPainting.erase();
+			if (e) {
+				ogPainting.fill(255);
+				ogPainting.circle(x, y, r * 2);
+			}
 		}
 
 		if (hasLock) {
-			p5.stroke(0);
-			p5.strokeWeight(6);
+			p5.stroke(255, 0, 0);
+			p5.strokeWeight(8);
 			p5.line(brushPosition.x, brushPosition.y, brushPosition.x + 12, brushPosition.y);
 			p5.line(brushPosition.x, brushPosition.y, brushPosition.x, brushPosition.y + 12);
 			p5.line(brushPosition.x, brushPosition.y, brushPosition.x + 32, brushPosition.y + 32);
@@ -127,7 +158,18 @@ const sketchGenerator = (p5: p5) => {
 					brushPosition.y - p5.lerp(p0.y, p1.y, amount));
 				brushDist = Math.min(brushDist, lineDist);
 			}
-			console.log(brushDist)
+			if (brushDist > failDist) {
+				p5.exitPointerLock();
+				state = SketchState.fail;
+			}
+			brushDists.push(brushDist);
+
+			const lastPoint = paintingPath[paintingPath.length - 1];
+			if (Math.hypot(lastPoint.x - brushPosition.x, lastPoint.y - brushPosition.y) < brushDist * 1.1) {
+				p5.exitPointerLock();
+				state = SketchState.ending;
+				focusEffects.push({ ...brushPosition, t: p5.frameCount, r: 30, m: 1.18, e: true });
+			}
 		}
 	}
 
@@ -139,10 +181,18 @@ const sketchGenerator = (p5: p5) => {
 		return dot / len;
 	}
 
+	function getScore() {
+		let sum = 0;
+		for (const dist of brushDists) {
+			sum += 1 - dist / failDist;
+		}
+		return (sum / brushDists.length) ** 2;
+	}
+
 	p5.mousePressed = function () {
+		if (state !== SketchState.waiting) return;
 		p5.requestPointerLock();
 		brushVelocity = { x: 0, y: 0 };
-		dropEffects.push({ ...brushPosition, t: p5.frameCount });
 	}
 };
 
