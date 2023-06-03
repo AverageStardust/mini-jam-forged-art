@@ -62,8 +62,8 @@ canvas {
 }
 
 .level {
-	width: 100px;
-	height: 100px;
+	width: 150px;
+	height: 150px;
 	background-size: cover;
 	opacity: 0.5;
 	border: 3px solid #831;
@@ -82,10 +82,10 @@ canvas {
 
 .level svg {
 	position: absolute;
-	width: 60px;
-	height: 60px;
+	width: 80px;
+	height: 80px;
 	fill: #831;
-	opacity: 0.8;
+	opacity: 0.9;
 	filter: drop-shadow(0 0 3px #000);
 }
 
@@ -127,4 +127,7 @@ button:hover {
 .score {
 	position: absolute;
     bottom: 0;
+	font-size: 28px;
+	font-weight: bold;
+	text-shadow: 0 0 5px #000;
 }
