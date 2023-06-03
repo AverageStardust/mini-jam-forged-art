@@ -2,6 +2,7 @@ import { createMemo } from "solid-js";
 import p5 from "p5";
 import { sketchSettings, SolidP5Wrapper } from "solid-p5-wrapper";
 import paintingPaths from "./paintingPaths.json";
+import { Howl } from "howler";
 
 interface SketchProps {
 	paintingName: string;
@@ -19,9 +20,16 @@ enum SketchState {
 	fail
 }
 
+const brushSounds: Howl[] = [];
 let markLevelAsComplete: (score: number) => void = () => { };
 let endLevel: () => void = () => { };
 let setMusicDistortion: (distortion: number) => void = () => { };
+
+for (let i = 0; i < 3; i++) {
+	brushSounds.push(new Howl({
+		src: ["./sounds/brush1.mp3"],
+	}));
+}
 
 const sketchGenerator = (p5: p5) => {
 	const paintingScale = 0.64;
@@ -38,7 +46,8 @@ const sketchGenerator = (p5: p5) => {
 	let brushPosition = { x: 0, y: 0 },
 		brushVelocity = { x: 0, y: 0 },
 		oldBrushPosition: { x: number, y: number },
-		brushDists: number[] = [];
+		brushDists: number[] = [],
+		brushSoundAccumulator = 0;
 
 	let state: SketchState = SketchState.waiting;
 
@@ -181,6 +190,13 @@ const sketchGenerator = (p5: p5) => {
 		brushPosition.x += brushVelocity.x;
 		brushPosition.y += brushVelocity.y;
 
+		const speed = Math.hypot(brushVelocity.x + p5.movedX * 0.1, brushVelocity.y + p5.movedY * 0.1);
+		brushSoundAccumulator += Math.sqrt(Math.max(0, speed - 0.5)) * 0.005;
+		if (brushSoundAccumulator > Math.random() * 5) {
+			playBrushSound(brushSoundAccumulator);
+			brushSoundAccumulator = 0;
+		}
+
 		if (Math.hypot(brushPosition.x - oldBrushPosition.x, brushPosition.y - oldBrushPosition.y) > 5) {
 			ogPainting.noStroke();
 			ogPainting.erase();
@@ -232,6 +248,13 @@ const sketchGenerator = (p5: p5) => {
 			sum += 1 - dist / failDist;
 		}
 		return (sum / brushDists.length) ** 2;
+	}
+
+	function playBrushSound(volume: number) {
+		const brushSound = brushSounds[Math.floor(p5.random(3))];
+		const id = brushSound.play();
+		brushSound.rate(p5.randomGaussian(1, 0.01), id);
+		brushSound.volume(volume, id);
 	}
 
 	p5.mousePressed = function () {
