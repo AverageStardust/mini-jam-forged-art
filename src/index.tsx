@@ -1,3 +1,6 @@
+import "the-new-css-reset/css/reset.css"
+import './styles.css'
+
 /* @refresh reload */
 import { render } from 'solid-js/web';
 
