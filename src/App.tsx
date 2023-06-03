@@ -1,7 +1,7 @@
 import { Show, createSignal } from "solid-js";
 import Sketch from "./Sketch";
 
-type PaintingName = "sonOfMan";
+type PaintingName = "sonOfMan" | "natureMorte" | "theRoom";
 
 function App() {
 	const [painting, setPainting] = createSignal<null | PaintingName>(null);
@@ -25,19 +25,19 @@ function App() {
 				</div>
 				<div classList={{
 					level: true,
-					complete: paintingIsComplete().has("sonOfMan")
-				}} onClick={() => setPainting("sonOfMan")}>
+					complete: paintingIsComplete().has("natureMorte")
+				}} onClick={() => setPainting("natureMorte")}>
 					<img src="./level_2_thumbnail.png"></img>
-					<Show when={paintingIsComplete().has("sonOfMan")}>
+					<Show when={paintingIsComplete().has("natureMorte")}>
 						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M0 11.386l1.17-1.206c1.951.522 5.313 1.731 8.33 3.597 3.175-4.177 9.582-9.398 13.456-11.777l1.044 1.073-14 18.927-10-10.614z"/></svg>
 					</Show>
 				</div>
 				<div classList={{
 					level: true,
-					complete: paintingIsComplete().has("sonOfMan")
-				}} onClick={() => setPainting("sonOfMan")}>
+					complete: paintingIsComplete().has("theRoom")
+				}} onClick={() => setPainting("theRoom")}>
 					<img src="./level_3_thumbnail.png"></img>
-					<Show when={paintingIsComplete().has("sonOfMan")}>
+					<Show when={paintingIsComplete().has("theRoom")}>
 						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M0 11.386l1.17-1.206c1.951.522 5.313 1.731 8.33 3.597 3.175-4.177 9.582-9.398 13.456-11.777l1.044 1.073-14 18.927-10-10.614z"/></svg>
 					</Show>
 				</div>
