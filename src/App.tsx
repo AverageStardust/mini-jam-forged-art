@@ -1,6 +1,6 @@
-import { Show, createSignal } from "solid-js";
+import { Show, createSignal, createEffect } from "solid-js";
 import Sketch from "./Sketch";
-import { Howl } from 'howler';
+import { Howl } from "howler";
 
 type PaintingName = "sonOfMan" | "natureMorte" | "theRoom";
 
@@ -17,9 +17,32 @@ function App() {
 	const hoverSound = new Howl({
 		src: ["./sounds/UIHover.mp3"],
 	});
+	const music = new Howl({
+		src: ["./sounds/Music.mp3"],
+		loop: true,
+		volume: 0.5,
+	});
+	const musicGlitch = new Howl({
+		src: ["./sounds/MusicGlitch.mp3"],
+		loop: true,
+		volume: 0,
+	});
+	music.play();
+	musicGlitch.play();
+
+	function setMusicDistortion(distortion: number) {
+		music.volume((1 - distortion) * 0.5);
+		musicGlitch.volume(distortion);
+	}
+
+	createEffect(() => {
+		if (painting() === null) {
+			setMusicDistortion(0);
+		}
+	})
 
 	return <>
-		<Show when={painting() == null}>
+		<Show when={painting() === null}>
 			<h1>One Stroke Forger!</h1>
 
 			<p class="moto">See original, Forge it, Profit...</p>
@@ -29,7 +52,7 @@ function App() {
 					level: true,
 					complete: paintingIsComplete().has("sonOfMan")
 				}} onClick={() => {
-					if (intervalReference != null) {
+					if (intervalReference !== null) {
 						clearInterval(intervalReference);
 						setSecondsBeforeLevelSelect(null);
 					}
@@ -46,7 +69,7 @@ function App() {
 					level: true,
 					complete: paintingIsComplete().has("natureMorte")
 				}} onClick={() => {
-					if (intervalReference != null) {
+					if (intervalReference !== null) {
 						clearInterval(intervalReference);
 						setSecondsBeforeLevelSelect(null);
 					}
@@ -63,7 +86,7 @@ function App() {
 					level: true,
 					complete: paintingIsComplete().has("theRoom")
 				}} onClick={() => {
-					if (intervalReference != null) {
+					if (intervalReference !== null) {
 						clearInterval(intervalReference);
 						setSecondsBeforeLevelSelect(null);
 					}
@@ -106,7 +129,7 @@ function App() {
 						complete.set(paintingName, Math.max(score, complete.get(paintingName) ?? 0));
 						return complete;
 					})
-				}}></Sketch>
+				}} setMusicDistortion={setMusicDistortion}></Sketch>
 			<button onClick={() => {
 				if (intervalReference != null) {
 					clearInterval(intervalReference);

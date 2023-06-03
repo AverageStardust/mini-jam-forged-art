@@ -8,6 +8,7 @@ interface SketchProps {
 	backToLevelSelect: () => void;
 	markLevelAsComplete: (score: number) => void;
 	endLevel: () => void;
+	setMusicDistortion: (distortion: number) => void;
 }
 
 enum SketchState {
@@ -17,6 +18,10 @@ enum SketchState {
 	win,
 	fail
 }
+
+let markLevelAsComplete: (score: number) => void = () => { };
+let endLevel: () => void = () => { };
+let setMusicDistortion: (distortion: number) => void = () => { };
 
 const sketchGenerator = (p5: p5) => {
 	const paintingScale = 0.64;
@@ -33,10 +38,8 @@ const sketchGenerator = (p5: p5) => {
 		brushVelocity = { x: 0, y: 0 },
 		oldBrushPosition: { x: number, y: number },
 		brushDists: number[] = [];
-	
+
 	let state: SketchState = SketchState.waiting;
-	let markLevelAsComplete: (score: number) => void = () => { };
-	let endLevel: () => void = () => { };
 
 	p5.setup = function () {
 		canvas = p5.createCanvas(400, 400);
@@ -47,8 +50,6 @@ const sketchGenerator = (p5: p5) => {
 
 	function propsMemo() {
 		const props = sketchSettings.props as SketchProps;
-		markLevelAsComplete = props.markLevelAsComplete;
-		endLevel = props.endLevel;
 		const paintingName = props.paintingName;
 		paintingPath = (paintingPaths as Record<string, { x: number, y: number }[]>)[paintingName];
 		brushPosition = { x: paintingPath[0].x, y: paintingPath[0].y };
@@ -135,18 +136,19 @@ const sketchGenerator = (p5: p5) => {
 			p5.noStroke();
 			p5.textAlign(p5.CENTER, p5.CENTER);
 			p5.textSize(32);
-			const instantScore = brushDists[brushDists.length - 1] / failDist;
+			const currentDist = brushDists[brushDists.length - 1] / failDist;
+			setMusicDistortion(currentDist);
 			let message, messageColor;
 			if (state === SketchState.fail) {
-				message = "Failed Forgery";
+				message = "Forgery Failed";
 				messageColor = "red";
-			} else if (instantScore < 0.1) {
+			} else if (currentDist < 0.1) {
 				message = "Masterful!";
 				messageColor = "#0AD";
-			} else if (instantScore < 0.2) {
+			} else if (currentDist < 0.2) {
 				message = "Good Job";
 				messageColor = "#1B1";
-			} else if (instantScore < 0.5) {
+			} else if (currentDist < 0.5) {
 				message = "It's Okay";
 				messageColor = "yellow";
 			} else {
@@ -242,6 +244,10 @@ const sketchGenerator = (p5: p5) => {
 };
 
 const Sketch = (props: SketchProps) => {
+	markLevelAsComplete = props.markLevelAsComplete;
+	endLevel = props.endLevel;
+	setMusicDistortion = props.setMusicDistortion;
+
 	return (
 		<SolidP5Wrapper
 			sketch={sketchGenerator}
