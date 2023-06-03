@@ -191,6 +191,8 @@ const sketchGenerator = (p5: p5) => {
 
 	p5.mousePressed = function () {
 		if (state !== SketchState.waiting) return;
+		if (p5.mouseX < 0 || p5.mouseY < 0 ||
+			p5.mouseX > p5.width || p5.mouseY > p5.height) return;
 		p5.requestPointerLock();
 		brushVelocity = { x: 0, y: 0 };
 	}
