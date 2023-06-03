@@ -30,9 +30,10 @@ const sketchGenerator = (p5: p5) => {
 	let canvas: p5.Renderer,
 		ogPainting: p5.Graphics,
 		fakePainting: p5.Image,
-		paintingPath: { x: number, y: number }[];
+		brushImg: p5.Image;
 
-	let focusEffects: { x: number, y: number, t: number, r: number, m: number, e: boolean }[] = [];
+	let focusEffects: { x: number, y: number, t: number, r: number, m: number, e: boolean }[] = [],
+		paintingPath: { x: number, y: number }[];
 
 	let brushPosition = { x: 0, y: 0 },
 		brushVelocity = { x: 0, y: 0 },
@@ -40,6 +41,10 @@ const sketchGenerator = (p5: p5) => {
 		brushDists: number[] = [];
 
 	let state: SketchState = SketchState.waiting;
+
+	p5.preload = function () {
+		brushImg = p5.loadImage("paintBrush.png");
+	}
 
 	p5.setup = function () {
 		canvas = p5.createCanvas(400, 400);
@@ -49,8 +54,7 @@ const sketchGenerator = (p5: p5) => {
 	};
 
 	function propsMemo() {
-		const props = sketchSettings.props as SketchProps;
-		const paintingName = props.paintingName;
+		const paintingName = sketchSettings.paintingName;
 		paintingPath = (paintingPaths as Record<string, { x: number, y: number }[]>)[paintingName];
 		brushPosition = { x: paintingPath[0].x, y: paintingPath[0].y };
 		brushVelocity = { x: 0, y: 0 };
@@ -122,39 +126,38 @@ const sketchGenerator = (p5: p5) => {
 			}
 		}
 
-		if (hasLock) {
-			p5.stroke(255, 0, 0);
-			p5.strokeWeight(8);
-			p5.line(brushPosition.x, brushPosition.y, brushPosition.x + 12, brushPosition.y);
-			p5.line(brushPosition.x, brushPosition.y, brushPosition.x, brushPosition.y + 12);
-			p5.line(brushPosition.x, brushPosition.y, brushPosition.x + 32, brushPosition.y + 32);
-		}
+		p5.image(brushImg, brushPosition.x - 8, brushPosition.y - 8);
 
 		p5.scale(1 / paintingScale);
 
 		if (brushDists.length > 1) {
-			p5.noStroke();
-			p5.textAlign(p5.CENTER, p5.CENTER);
-			p5.textSize(32);
 			const currentDist = brushDists[brushDists.length - 1] / failDist;
 			setMusicDistortion(currentDist);
 			let message, messageColor;
 			if (state === SketchState.fail) {
-				message = "Forgery Failed";
-				messageColor = "red";
+				message = "Failure";
+				messageColor = "#F11";
+			} else if (state === SketchState.win) {
+				message = "Successful";
+				messageColor = "#80E";
 			} else if (currentDist < 0.1) {
-				message = "Masterful!";
+				message = "Great";
 				messageColor = "#0AD";
 			} else if (currentDist < 0.2) {
-				message = "Good Job";
+				message = "Good";
 				messageColor = "#1B1";
 			} else if (currentDist < 0.5) {
-				message = "It's Okay";
-				messageColor = "yellow";
+				message = "Okay";
+				messageColor = "#DD0";
 			} else {
-				message = "Follow the line!";
-				messageColor = "orange";
+				message = "Bad";
+				messageColor = "#D90";
 			}
+			p5.textAlign(p5.CENTER, p5.CENTER);
+			p5.textSize(32);
+			p5.noStroke();
+			p5.fill(0);
+			p5.text(message, p5.width / 2 + 3, p5.height - 20 + 3);
 			p5.fill(messageColor);
 			p5.text(message, p5.width / 2, p5.height - 20);
 		}
@@ -183,12 +186,9 @@ const sketchGenerator = (p5: p5) => {
 			ogPainting.erase();
 			ogPainting.fill(255, 32);
 			for (let i = 0; i < 32; i++) {
-				ogPainting.circle(oldBrushPosition.x + p5.random(0, 20), oldBrushPosition.y + p5.randomGaussian(0, 20), 16);
-			}
-			ogPainting.noErase();
-			for (let i = 0; i < 4; i++) {
-				ogPainting.fill(p5.random(100, 255), p5.random(100, 255), p5.random(100, 255), 32);
-				ogPainting.circle(oldBrushPosition.x + p5.random(0, 8), oldBrushPosition.y + p5.randomGaussian(0, 8), 16);
+				const a = p5.random(p5.TAU);
+				const d = p5.randomGaussian(0, 35);
+				ogPainting.circle(oldBrushPosition.x + Math.sign(a) * d, oldBrushPosition.y + Math.sin(a) * d, 24);
 			}
 			oldBrushPosition = { ...brushPosition };
 
@@ -251,7 +251,7 @@ const Sketch = (props: SketchProps) => {
 	return (
 		<SolidP5Wrapper
 			sketch={sketchGenerator}
-			props={props}
+			paintingName={props.paintingName}
 		/>
 	);
 };

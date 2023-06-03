@@ -36,13 +36,13 @@ function App() {
 	}
 
 	createEffect(() => {
-		if (painting() === null) {
+		if (painting() == null) {
 			setMusicDistortion(0);
 		}
 	})
 
 	return <>
-		<Show when={painting() === null}>
+		<Show when={painting() == null}>
 			<h1>One Stroke Forger!</h1>
 
 			<p class="moto">See original, Forge it, Profit...</p>
@@ -52,7 +52,7 @@ function App() {
 					level: true,
 					complete: paintingIsComplete().has("sonOfMan")
 				}} onClick={() => {
-					if (intervalReference !== null) {
+					if (intervalReference != null) {
 						clearInterval(intervalReference);
 						setSecondsBeforeLevelSelect(null);
 					}
@@ -69,7 +69,7 @@ function App() {
 					level: true,
 					complete: paintingIsComplete().has("natureMorte")
 				}} onClick={() => {
-					if (intervalReference !== null) {
+					if (intervalReference != null) {
 						clearInterval(intervalReference);
 						setSecondsBeforeLevelSelect(null);
 					}
@@ -86,7 +86,7 @@ function App() {
 					level: true,
 					complete: paintingIsComplete().has("theRoom")
 				}} onClick={() => {
-					if (intervalReference !== null) {
+					if (intervalReference != null) {
 						clearInterval(intervalReference);
 						setSecondsBeforeLevelSelect(null);
 					}
@@ -125,7 +125,7 @@ function App() {
 				(score: number) => {
 					setPaintingIsComplete((complete) => {
 						const paintingName = painting();
-						if (paintingName === null) return complete;
+						if (paintingName == null) return complete;
 						complete.set(paintingName, Math.max(score, complete.get(paintingName) ?? 0));
 						return complete;
 					})
