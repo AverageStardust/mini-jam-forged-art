@@ -27,7 +27,7 @@ let setMusicDistortion: (distortion: number) => void = () => { };
 
 for (let i = 0; i < 3; i++) {
 	brushSounds.push(new Howl({
-		src: ["./sounds/brush1.mp3"],
+		src: ["./sounds/brush" + i + ".mp3"],
 	}));
 }
 
