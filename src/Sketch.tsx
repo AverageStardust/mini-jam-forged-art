@@ -217,8 +217,7 @@ const sketchGenerator = (p5: p5) => {
 		brushVelocity = brushVelocity.add(brushAcceleration);
 		brushPosition = brushPosition.add(brushVelocity);
 
-		const speed = mouseVelocity.mag * 0.01 + brushAcceleration.mag * 0.03;
-		brushSoundAccumulator += Math.sqrt(Math.max(0, speed - 0.5)) * 0.005;
+		brushSoundAccumulator += (Math.sqrt(mouseVelocity.mag) * 0.00015 + Math.sqrt(brushAcceleration.mag) * 0.001) / friction;
 		if (brushSoundAccumulator > Math.random() * 5) {
 			playBrushSound(brushSoundAccumulator);
 			brushSoundAccumulator = 0;
