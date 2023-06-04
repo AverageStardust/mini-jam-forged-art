@@ -3,19 +3,30 @@ import p5 from "p5";
 import { sketchSettings, SolidP5Wrapper } from "solid-p5-wrapper";
 import paintingPaths from "./paintingPaths.json";
 import { Howl } from "howler";
+import { Vec2 } from "./vector2";
+import { PaintingName } from "./App";
 
 interface SketchProps {
-	paintingName: string;
+	paintingName: PaintingName;
 	backToLevelSelect: () => void;
 	markLevelAsComplete: (score: number) => void;
 	endLevel: () => void;
 	setMusicDistortion: (distortion: number) => void;
 }
 
+interface FocusEffect {
+	position: Vec2;
+	frame: number;
+	radius: number;
+	radiusMultiplier: number;
+	ending: boolean;
+}
+
 enum SketchState {
-	waiting,
+	waiting, // waiting for mouse lock
 	drawing,
-	ending,
+	finished, // game just finished (only 1 frame)
+	ending, // playing ending animation
 	win,
 	fail
 }
@@ -40,13 +51,14 @@ const sketchGenerator = (p5: p5) => {
 		fakePainting: p5.Image,
 		brushImg: p5.Image;
 
-	let focusEffects: { x: number, y: number, t: number, r: number, m: number, e: boolean }[] = [],
-		paintingPath: { x: number, y: number }[];
+	let focusEffects: FocusEffect[] = [],
+		paintingPath: Vec2[] = [];
 
-	let brushPosition = { x: 0, y: 0 },
-		brushVelocity = { x: 0, y: 0 },
-		oldBrushPosition: { x: number, y: number },
+	let brushPosition = new Vec2(),
+		brushVelocity = new Vec2(),
+		oldBrushPosition = new Vec2(),
 		brushDists: number[] = [],
+		brushProgress = 0,
 		brushSoundAccumulator = 0;
 
 	let state: SketchState = SketchState.waiting;
@@ -63,12 +75,14 @@ const sketchGenerator = (p5: p5) => {
 	};
 
 	function propsMemo() {
-		const paintingName = sketchSettings.paintingName;
-		paintingPath = (paintingPaths as Record<string, { x: number, y: number }[]>)[paintingName];
-		brushPosition = { x: paintingPath[0].x, y: paintingPath[0].y };
-		brushVelocity = { x: 0, y: 0 };
-		oldBrushPosition = { ...brushPosition };
+		const paintingName = sketchSettings.paintingName as PaintingName;
+		paintingPath = paintingPaths[paintingName].map((obj) => new Vec2(obj));
+		brushPosition = new Vec2(paintingPath[0]);
+		brushVelocity = new Vec2();
+		oldBrushPosition = new Vec2(brushPosition);
 		brushDists = [];
+		brushProgress = 0;
+		brushSoundAccumulator = 0;
 		state = SketchState.waiting;
 
 		canvas.hide();
@@ -85,12 +99,30 @@ const sketchGenerator = (p5: p5) => {
 		if (!ogPainting || !fakePainting) return;
 
 		const hasLock = document.pointerLockElement === canvas.elt;
-		if (state === SketchState.drawing && !hasLock) {
-			state = SketchState.waiting;
-			focusEffects.push({ ...brushPosition, t: p5.frameCount, r: 30, m: 1.18, e: false });
-		} else if (state === SketchState.waiting && hasLock) {
+		const drawingOrFinished = (state === SketchState.drawing || state === SketchState.finished);
+
+		if (!hasLock && drawingOrFinished) {
+			if (state === SketchState.drawing) {
+				state = SketchState.waiting;
+			} else {
+				state = SketchState.ending;
+			}
+			focusEffects.push({
+				position: brushPosition,
+				frame: p5.frameCount,
+				radius: 30,
+				radiusMultiplier: 1.18,
+				ending: state === SketchState.ending
+			});
+		} else if (hasLock && state === SketchState.waiting) {
 			state = SketchState.drawing;
-			focusEffects.push({ ...brushPosition, t: p5.frameCount, r: 2000, m: 0.85, e: false });
+			focusEffects.push({
+				position: brushPosition,
+				frame: p5.frameCount,
+				radius: 2000,
+				radiusMultiplier: 0.85,
+				ending: false
+			});
 		}
 
 		if (hasLock) update();
@@ -110,10 +142,10 @@ const sketchGenerator = (p5: p5) => {
 		p5.drawingContext.setLineDash([]);
 
 		for (let i = 0; i < focusEffects.length; i++) {
-			const { x, y, t, r, e } = focusEffects[i];
-			const age = p5.frameCount - t;
+			const { position, frame, radius, radiusMultiplier, ending } = focusEffects[i];
+			const age = p5.frameCount - frame;
 			if (age > 30) {
-				if (e) {
+				if (ending) {
 					state = SketchState.win;
 					markLevelAsComplete(getScore());
 					endLevel();
@@ -122,16 +154,16 @@ const sketchGenerator = (p5: p5) => {
 				i--;
 				continue;
 			} else {
-				focusEffects[i].r *= focusEffects[i].m;
+				focusEffects[i].radius *= radiusMultiplier;
 			}
 			p5.noFill();
 			p5.stroke(0, 300 - age * 10);
-			p5.strokeWeight(r * 0.25);
-			p5.circle(x, y, r * 2);
+			p5.strokeWeight(radius * 0.25);
+			p5.circle(position.x, position.y, radius * 2);
 			ogPainting.erase();
-			if (e) {
+			if (ending) {
 				ogPainting.fill(255);
-				ogPainting.circle(x, y, r * 2);
+				ogPainting.circle(position.x, position.y, radius * 2);
 			}
 		}
 
@@ -141,26 +173,21 @@ const sketchGenerator = (p5: p5) => {
 
 		if (brushDists.length > 1) {
 			const currentDist = brushDists[brushDists.length - 1] / failDist;
-			setMusicDistortion(currentDist);
+			setMusicDistortion(currentDist ** 0.9);
 			let message, messageColor;
 			if (state === SketchState.fail) {
 				message = "Failure";
 				messageColor = "#F11";
 			} else if (state === SketchState.win) {
-				message = "Successful";
-				messageColor = "#80E";
-			} else if (currentDist < 0.1) {
-				message = "Great";
-				messageColor = "#0AD";
-			} else if (currentDist < 0.2) {
-				message = "Good";
-				messageColor = "#1B1";
-			} else if (currentDist < 0.5) {
-				message = "Okay";
-				messageColor = "#DD0";
+				message = "Success";
+				messageColor = "#0F3";
 			} else {
-				message = "Bad";
-				messageColor = "#D90";
+				message = "$" + Math.floor(getScore() * brushProgress * 1000) + "k";
+				if (currentDist < 1/3) {
+					messageColor = this.lerpColor(p5.color("#0F3"), p5.color("#DD0"), currentDist * 3);
+				} else {
+					messageColor = this.lerpColor(p5.color("#DD0"), p5.color("#F11"), (currentDist * 3 - 1) / 2);
+				}
 			}
 			p5.textAlign(p5.CENTER, p5.CENTER);
 			p5.textSize(32);
@@ -183,14 +210,14 @@ const sketchGenerator = (p5: p5) => {
 	}
 
 	function update() {
-		brushVelocity.x += p5.movedX * 0.012;
-		brushVelocity.y += p5.movedY * 0.012;
-		brushVelocity.x *= 0.99;
-		brushVelocity.y *= 0.99;
-		brushPosition.x += brushVelocity.x;
-		brushPosition.y += brushVelocity.y;
+		const mouseVelocity = new Vec2(p5.movedX, p5.movedY);
+		// accelerate slow, decelerate fast
+		const friction = mouseVelocity.mag > brushVelocity.mag ? 0.08 : 0.12;
+		const brushAcceleration = mouseVelocity.sub(brushVelocity).limit(friction);
+		brushVelocity = brushVelocity.add(brushAcceleration);
+		brushPosition = brushPosition.add(brushVelocity);
 
-		const speed = Math.hypot(brushVelocity.x + p5.movedX * 0.1, brushVelocity.y + p5.movedY * 0.1);
+		const speed = mouseVelocity.mag * 0.01 + brushAcceleration.mag * 0.03;
 		brushSoundAccumulator += Math.sqrt(Math.max(0, speed - 0.5)) * 0.005;
 		if (brushSoundAccumulator > Math.random() * 5) {
 			playBrushSound(brushSoundAccumulator);
@@ -206,30 +233,46 @@ const sketchGenerator = (p5: p5) => {
 				const d = p5.randomGaussian(0, 35);
 				ogPainting.circle(oldBrushPosition.x + Math.sign(a) * d, oldBrushPosition.y + Math.sin(a) * d, 24);
 			}
-			oldBrushPosition = { ...brushPosition };
+			oldBrushPosition = new Vec2(brushPosition);
 
 			let brushDist = Infinity;
+			let totalPathLength = 0, lengthBeforeBest = 0, lengthAfterBest = 0;
 			for (let i = 0; i < paintingPath.length - 1; i++) {
 				const p0 = paintingPath[i];
 				const p1 = paintingPath[i + 1];
+				const lineLength = p0.dist(p1);
 				const amount = p5.constrain(pointLocationAlongLine(brushPosition, p0, p1), 0, 1);
-				const lineDist = Math.hypot(
-					brushPosition.x - p5.lerp(p0.x, p1.x, amount),
-					brushPosition.y - p5.lerp(p0.y, p1.y, amount));
-				brushDist = Math.min(brushDist, lineDist);
+				const nearestPoint = p0.lerp(p1, amount);
+				const currentBrushDist = brushPosition.dist(nearestPoint);
+				
+				totalPathLength += lineLength;
+				if (currentBrushDist < brushDist) {
+					brushDist = currentBrushDist;
+					lengthBeforeBest += lengthAfterBest;
+					lengthAfterBest = p1.dist(nearestPoint);
+					lengthBeforeBest += lineLength - lengthAfterBest;
+				} else {
+					lengthAfterBest += lineLength;
+				}
 			}
+
 			if (brushDist > failDist) {
 				p5.exitPointerLock();
 				state = SketchState.fail;
 				endLevel();
+				return;
 			}
-			brushDists.push(brushDist);
+
+			const currentProgress = lengthBeforeBest / totalPathLength;
+			if (currentProgress > brushProgress) {
+				brushDists.push(brushDist);
+				brushProgress = currentProgress;
+			}
 
 			const lastPoint = paintingPath[paintingPath.length - 1];
 			if (Math.hypot(lastPoint.x - brushPosition.x, lastPoint.y - brushPosition.y) < brushDist * 1.1) {
 				p5.exitPointerLock();
-				state = SketchState.ending;
-				focusEffects.push({ ...brushPosition, t: p5.frameCount, r: 30, m: 1.18, e: true });
+				state = SketchState.finished;
 			}
 		}
 	}
@@ -243,6 +286,7 @@ const sketchGenerator = (p5: p5) => {
 	}
 
 	function getScore() {
+		if (brushDists.length === 0) return 0;
 		let sum = 0;
 		for (const dist of brushDists) {
 			sum += 1 - dist / failDist;
@@ -262,7 +306,7 @@ const sketchGenerator = (p5: p5) => {
 		if (p5.mouseX < 0 || p5.mouseY < 0 ||
 			p5.mouseX > p5.width || p5.mouseY > p5.height) return;
 		p5.requestPointerLock();
-		brushVelocity = { x: 0, y: 0 };
+		brushVelocity = new Vec2();
 	}
 };
 

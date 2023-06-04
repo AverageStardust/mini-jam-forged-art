@@ -2,7 +2,7 @@ import { Show, createSignal, createEffect } from "solid-js";
 import Sketch from "./Sketch";
 import { Howl } from "howler";
 
-type PaintingName = "sonOfMan" | "natureMorte" | "theRoom";
+export type PaintingName = "sonOfMan" | "natureMorte" | "theRoom";
 
 function App() {
 	const [painting, setPainting] = createSignal<null | PaintingName>(null);
