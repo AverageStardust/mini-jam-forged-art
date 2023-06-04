@@ -9,5 +9,6 @@ export default defineConfig({
 	},
 	build: {
 		target: 'esnext',
-	}
+	},
+	base: "" // make vite build with relative paths for deployment
 });
