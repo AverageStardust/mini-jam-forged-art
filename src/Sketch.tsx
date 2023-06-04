@@ -58,6 +58,7 @@ const sketchGenerator = (p5: p5) => {
 		brushVelocity = new Vec2(),
 		oldBrushPosition = new Vec2(),
 		brushDists: number[] = [],
+		currentBrushDist = 0,
 		brushProgress = 0,
 		brushSoundAccumulator = 0;
 
@@ -81,6 +82,7 @@ const sketchGenerator = (p5: p5) => {
 		brushVelocity = new Vec2();
 		oldBrushPosition = new Vec2(brushPosition);
 		brushDists = [];
+		currentBrushDist = 0;
 		brushProgress = 0;
 		brushSoundAccumulator = 0;
 		state = SketchState.waiting;
@@ -172,21 +174,21 @@ const sketchGenerator = (p5: p5) => {
 		p5.scale(1 / paintingScale);
 
 		if (brushDists.length > 1) {
-			const currentDist = brushDists[brushDists.length - 1] / failDist;
-			setMusicDistortion(currentDist ** 0.9);
+			setMusicDistortion(currentBrushDist ** 0.9);
+
 			let message, messageColor;
 			if (state === SketchState.fail) {
 				message = "Failure";
-				messageColor = "#F11";
+				messageColor = p5.color("#F11");
 			} else if (state === SketchState.win) {
 				message = "Success";
-				messageColor = "#0F3";
+				messageColor = p5.color("#0F3");
 			} else {
 				message = "$" + Math.floor(getScore() * brushProgress * 1000) + "k";
-				if (currentDist < 1/3) {
-					messageColor = this.lerpColor(p5.color("#0F3"), p5.color("#DD0"), currentDist * 3);
+				if (currentBrushDist < 1 / 3) {
+					messageColor = this.lerpColor(p5.color("#0F3"), p5.color("#DD0"), currentBrushDist * 3);
 				} else {
-					messageColor = this.lerpColor(p5.color("#DD0"), p5.color("#F11"), (currentDist * 3 - 1) / 2);
+					messageColor = this.lerpColor(p5.color("#DD0"), p5.color("#F11"), (currentBrushDist * 3 - 1) / 2);
 				}
 			}
 			p5.textAlign(p5.CENTER, p5.CENTER);
@@ -242,8 +244,8 @@ const sketchGenerator = (p5: p5) => {
 				const lineLength = p0.dist(p1);
 				const amount = p5.constrain(pointLocationAlongLine(brushPosition, p0, p1), 0, 1);
 				const nearestPoint = p0.lerp(p1, amount);
-				const currentBrushDist = brushPosition.dist(nearestPoint);
-				
+				currentBrushDist = brushPosition.dist(nearestPoint);
+
 				totalPathLength += lineLength;
 				if (currentBrushDist < brushDist) {
 					brushDist = currentBrushDist;
